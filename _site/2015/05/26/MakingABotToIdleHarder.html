@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+   <title>Making A Bot To Idle Harder</title>
+   <meta name="author" content="Bryce Van Dyk" />
+
+   <!-- syntax highlighting CSS -->
+   <link rel="stylesheet" href="/css/syntax.css" type="text/css" />
+</head>
+<body>
+
+<div class="site">
+  <div class="title">
+    <a class="extra" href="/">home</a>
+  </div>
+  
+  <p>The bot is going to click within the window, so I need to find where the window is on the screen. Since I’m programming this on Windows I’m going to use Python for Windows Extensions (http://sourceforge.net/projects/pywin32/). These extensions expose parts of the Windows API via python.</p>
+
+<p>Using win32gui I can grab a handle to the clicker heroes window:</p>
+
+<div class="highlight"><pre><code class="language-py" data-lang="py"><span class="n">win32gui</span><span class="o">.</span><span class="n">FindWindow</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s">"Clicker Heroes"</span><span class="p">)</span></code></pre></div>
+
+<p>Then with the handle I can grab the screen coordinates of the window:</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">window_left</span><span class="p">,</span> <span class="n">window_top</span><span class="p">,</span> <span class="n">window_right</span><span class="p">,</span> <span class="n">window_bottom</span> <span class="o">=</span> <span class="n">win32gui</span><span class="o">.</span><span class="n">GetWindowRect</span><span class="p">(</span><span class="n">window_handle</span><span class="p">)</span></code></pre></div>
+
+<p>This is groovy, but this rectangle includes the borders and header of the window. I can also grab the client area of the window, but this is isn’t in screen coordinates. However, with these two functions and a bit of algebra I can figure out the client area in screen cooridnates:</p>
+
+<div class="highlight"><pre><code class="language-py" data-lang="py"><span class="n">window_left</span><span class="p">,</span> <span class="n">window_top</span><span class="p">,</span> <span class="n">window_right</span><span class="p">,</span> <span class="n">window_bottom</span> <span class="o">=</span> <span class="n">win32gui</span><span class="o">.</span><span class="n">GetWindowRect</span><span class="p">(</span><span class="n">window_handle</span><span class="p">)</span>
+<span class="n">client_left</span><span class="p">,</span> <span class="n">client_top</span><span class="p">,</span> <span class="n">client_right</span><span class="p">,</span> <span class="n">client_bottom</span> <span class="o">=</span> <span class="n">win32gui</span><span class="o">.</span><span class="n">GetClientRect</span><span class="p">(</span><span class="n">window_handle</span><span class="p">)</span>
+
+<span class="n">window_width</span> <span class="o">=</span> <span class="n">window_right</span> <span class="o">-</span> <span class="n">window_left</span>
+<span class="n">client_width</span> <span class="o">=</span> <span class="n">client_right</span>
+<span class="n">border_width</span> <span class="o">=</span> <span class="p">(</span><span class="n">window_width</span> <span class="o">-</span> <span class="n">client_width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+<span class="n">window_height</span> <span class="o">=</span> <span class="n">window_bottom</span> <span class="o">-</span> <span class="n">window_top</span>
+<span class="n">client_height</span> <span class="o">=</span> <span class="n">client_bottom</span>
+<span class="n">header_height</span> <span class="o">=</span> <span class="n">window_height</span> <span class="o">-</span> <span class="n">client_height</span> <span class="o">-</span> <span class="n">border_width</span>
+
+<span class="n">client_area_on_screen</span> <span class="o">=</span> <span class="p">(</span><span class="n">window_left</span> <span class="o">+</span> <span class="n">border_width</span><span class="p">,</span> <span class="n">window_top</span> <span class="o">+</span> <span class="n">header_height</span><span class="p">,</span>
+                         <span class="n">window_right</span> <span class="o">-</span> <span class="n">border_width</span><span class="p">,</span> <span class="n">window_bottom</span> <span class="o">-</span> <span class="n">border_width</span><span class="p">)</span></code></pre></div>
+
+<p>BREAK</p>
+
+<p>In order to have the bot controllable by the user, even if it’s not in focus, I’m going to need to grab input from the user. I’m going to do this by listening for key presses and if we get a specific press, killing the bot.</p>
+
+<p>A relatively light weight way to do this is by registering a hot key. This involves asking Windows to send a key press to the bot program instead of sending it to the window in focus. This done by calling the RegisterHotKey function.</p>
+
+<div class="highlight"><pre><code class="language-py" data-lang="py"><span class="n">win32gui</span><span class="o">.</span><span class="n">RegisterHotKey</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">win32con</span><span class="o">.</span><span class="n">VK_F11</span><span class="p">)</span></code></pre></div>
+
+
+  
+
+</div>
+
+</body>
+</html>
