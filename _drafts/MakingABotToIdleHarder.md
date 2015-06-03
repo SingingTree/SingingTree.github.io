@@ -31,8 +31,33 @@ window_height = window_bottom - window_top
 client_height = client_bottom
 header_height = window_height - client_height - border_width
 
-client_area_on_screen = (window_left + border_width, window_top + header_height,
+client_rect_on_screen = (window_left + border_width, window_top + header_height,
                          window_right - border_width, window_bottom - border_width)
+{% endhighlight %}
+
+This figures out the client rectangle on the screen, but there's a little more that needs to be done. Clicker Heroes will maintain a 16:9 ratio even if the window changes size. In order to do this the actual game area is letterboxed. I can figure out where the game area is by looking at if the client area is wider, or taller than 16:9 and then calculating the appropriate letter boxes. Using this info I can find the actual game rectangle in screen coordinates:
+
+{% highlight py %}
+normalised_width = client_width / 16
+normalised_height = client_height / 9
+
+if normalised_width >  normalised_height:
+    game_width = normalised_height * 16
+    game_height = normalised_height * 9
+elif normalised_height > normalised_width:
+    game_width = normalised_width * 16
+    game_height = normalised_width * 9
+else:
+    game_width = normalised_width * 16
+    game_height = normalised_height * 9
+
+horizontal_letterbox_width = (client_width - game_width) / 2
+vertical_letterbox_height = (client_height - game_height) / 2
+
+game_screen_coords_rect = (client_rect_on_screen[0] + horizontal_letterbox_width,
+                           client_rect_on_screen[1] + vertical_letterbox_height,
+                           client_rect_on_screen[2] - horizontal_letterbox_width,
+                           client_rect_on_screen[3] - vertical_letterbox_height)
 {% endhighlight %}
 
 BREAK
