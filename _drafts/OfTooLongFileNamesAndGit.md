@@ -35,4 +35,21 @@ This is interesting because the file systems that Windows uses today aren't a cl
 
 The Windows API has a constant, MAX_PATH, [which is defined to be 260]( https://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx#maxpath). There are various intricacies to how this ends up impacting your paths and file names (see the link). However, the net upshot is that you have a path limit that you can hit with only a moderate amount of effort, as opposed to say 4096, which you really have to make some effort to go for (4096 being a common value for PATH_MAX).
 
-MAX_PATH appears to be one of these historical things. The Windows API enforces this limit in many of it's [ANSI related functions](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365239%28v=vs.85%29.aspx).
+MAX_PATH appears to be one of these historical things. The Windows API enforces this limit for its [ANSI file manipulation functions](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365239%28v=vs.85%29.aspx).
+
+## core.longpaths
+
+The core.longpaths variable is special to msysgit. If you grep through the git source you won't find a reference to it. And just to mess with you, if you do a grep of the source for msysgit without checking out submodules you also won't find it. But if you grep the source of a msysgit with its submodules inited and updated, then you're in for a treat.
+
+Msysgit has its own git submodule with modifications. This submodule lives in the git directory which hangs directly off the root of the msysgit directory structure. This is where the adventure starts:
+
+git/config.c has the following change:
+
+{% highlight c %}
+if (!strcmp(var, "core.longpaths")) {
+	core_long_paths = git_config_bool(var, value);
+	return 0;
+}
+{% endhighlight %}
+
+to handle the longpaths var being set. While you can set the var on a non msys version of git, it won't be handled in the same way due to code such as this missing.
