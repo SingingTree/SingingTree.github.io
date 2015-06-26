@@ -35,7 +35,7 @@ This is interesting because the file systems that Windows uses today aren't a cl
 
 The Windows API has a constant, MAX_PATH, [which is defined to be 260]( https://msdn.microsoft.com/en-us/library/aa365247%28VS.85%29.aspx#maxpath). There are various intricacies to how this ends up impacting your paths and file names (see the link). However, the net upshot is that you have a path limit that you can hit with only a moderate amount of effort, as opposed to say 4096, which you really have to make some effort to go for (4096 being a common value for PATH_MAX).
 
-MAX_PATH appears to be one of these historical things. The Windows API enforces this limit for its [ANSI file manipulation functions](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365239%28v=vs.85%29.aspx).
+MAX_PATH appears to be one of these historical things. The Windows API enforces this limit for its [ANSI file manipulation functions](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365239%28v=vs.85%29.aspx). These functions also have Unicode versions, which have a much greater character limit of 32767 characters.
 
 ## core.longpaths
 
@@ -52,4 +52,10 @@ if (!strcmp(var, "core.longpaths")) {
 }
 {% endhighlight %}
 
-to handle the longpaths var being set. While you can set the var on a non msys version of git, it won't be handled in the same way due to code such as this missing.
+to handle the longpaths var being set. While you can set the var on a non msys version of git, it won't do anything, as there's no code to handle it.
+
+Internally the core_long_paths variable is used to track if long paths are enabled or not in msysgit. The variable is declared in environment.c which is described by a comment as follows:
+
+*We put all the git config variables in this same object file, so that programs can link against the config parser without having to link against all the rest of git.*
+
+Aside from that the core_long_paths variable is used in a few other files, importantly mingw.h and mingw.c.
