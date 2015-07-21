@@ -53,7 +53,7 @@ The core.longpaths config option is special to msysgit. If you grep through the 
 
 Msysgit has its own git submodule with modifications. This submodule lives in the git directory which hangs directly off the root of the msysgit directory structure. This is where the adventure starts:
 
-git/config.c has the following change:
+msysgit/git/config.c has the following change:
 
 {% highlight c %}
 if (!strcmp(var, "core.longpaths")) {
@@ -64,11 +64,11 @@ if (!strcmp(var, "core.longpaths")) {
 
 to handle the longpaths var being set. While you can set the var on a non msys version of git, it won't do anything, as there's no code to handle it.
 
-Internally the core_long_paths variable is used to track if long paths are enabled. The variable is declared in environment.c which is described by a comment as follows:
+Internally the core_long_paths variable is used to track if long paths are enabled. The variable is declared in msysgit/git/environment.c which is described by a comment as follows:
 
 *We put all the git config variables in this same object file, so that programs can link against the config parser without having to link against all the rest of git.*
 
-Aside from that, the core_long_paths variable is used in a few other files, importantly mingw.h and mingw.c. It's used by the function xutftowcs_long_path, which is a special long path version of xutftowcs, which in turn is a function that converts UTF-8 names into UTF-16LE. This is [because Windows likes its wide chars at 16 bits](https://msdn.microsoft.com/en-us/library/windows/desktop/aa367308%28v=vs.85%29.aspx), and the path should be expressed in wide chars.
+Aside from that, the core_long_paths variable is used in a few other files, importantly msysgit/git/compat/mingw.h and msysgit/git/compat/mingw.c. It's used by the function xutftowcs_long_path, which is a special long path version of xutftowcs, which in turn is a function that converts UTF-8 names into UTF-16LE. This is [because Windows likes its wide chars at 16 bits](https://msdn.microsoft.com/en-us/library/windows/desktop/aa367308%28v=vs.85%29.aspx), and the path should be expressed in wide chars.
 
 Diving further into the code one can find the handle_long_path function, which does kinda what it sounds like. handle_long_path has an arg, expand, which stores the value from core_long_paths, and is used to gate the creation of long paths starting with \\\\?\\. If the variable is not true, an error will be returned if the path is too long:
 
